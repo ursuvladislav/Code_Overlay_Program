@@ -1,0 +1,11 @@
+{
+
+    "cppEnabled": true,
+    "includesOnlyHotkey": "Ctrl+Shift+/",
+    "includesAndMainHotkey": "Ctrl+Shift+Space",
+    "openSettingsHotkey": "Ctrl+Shift+Alt+O",
+    "executionTimeoutMs": 2000,
+    "showOverlay": true,
+    "startHidden": false
+
+}

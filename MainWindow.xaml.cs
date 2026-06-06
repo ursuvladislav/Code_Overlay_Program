@@ -1,95 +1,92 @@
 ﻿using System;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Interop;
+using CodeOverlayRunner.Services;
+using System.Diagnostics;
 
 namespace CodeOverlayRunner
 {
     public partial class MainWindow : Window
     {
+        private readonly HotkeyService _hotkeyService;
         private readonly OverlayWindow _overlay;
 
-        private const int HOTKEY_ID_INCLUDES_ONLY = 1;
-        private const int HOTKEY_ID_INCLUDES_AND_MAIN = 2;
-
-        // Модификаторы
-        private const uint MOD_CONTROL = 0x0002;
-        private const uint MOD_SHIFT = 0x0004;
-
-        // Клавиши
-        private const uint VK_SPACE = 0x20;   // Space
-        private const uint VK_OEM_2 = 0xBF;   // / ? на стандартной раскладке
+        private bool _isRunning = false;
 
         public MainWindow()
         {
             InitializeComponent();
+
             _overlay = new OverlayWindow();
+            _hotkeyService = new HotkeyService(this);
+
+            _hotkeyService.OpenMainWindowPressed += (_, _) =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    _isRunning = false;
+
+                    _hotkeyService.Unregister();
+
+                    Show();
+                    WindowState = WindowState.Normal;
+                    Activate();
+
+                    _overlay.ShowMessage("CodeOverlay stopped.");
+                });
+            };
+
+            _hotkeyService.IncludesOnlyPressed += async (_, _) =>
+            {
+                await ExecuteAsync(BuildMode.IncludesOnly);
+            };
+
+            _hotkeyService.IncludesAndMainPressed += async (_, _) =>
+            {
+                await ExecuteAsync(BuildMode.IncludesAndMain);
+            };
         }
 
-        protected override void OnSourceInitialized(EventArgs e)
+        private void StartButton_Click(object sender, RoutedEventArgs e)
         {
-            base.OnSourceInitialized(e);
+            if (_isRunning)
+                return;
 
-            var helper = new WindowInteropHelper(this);
-            var source = HwndSource.FromHwnd(helper.Handle);
-            source.AddHook(WndProc);
+            _hotkeyService.Register();
+            _isRunning = true;
 
-            // Ctrl + Shift + /
-            RegisterHotKey(helper.Handle, HOTKEY_ID_INCLUDES_ONLY, MOD_CONTROL | MOD_SHIFT, VK_OEM_2);
+            _overlay.ShowMessage("CodeOverlay started.");
 
-            // Ctrl + Shift + Space
-            RegisterHotKey(helper.Handle, HOTKEY_ID_INCLUDES_AND_MAIN, MOD_CONTROL | MOD_SHIFT, VK_SPACE);
-
-            // Главное окно не показываем
             Hide();
         }
 
+        private void GitHubButton_Click(object sender, RoutedEventArgs e)
+        {
+            Process.Start(
+                new ProcessStartInfo
+                {
+                    FileName = "https://github.com/ursuvladislav/Code_Overlay_Program",
+                    UseShellExecute = true
+                });
+        }
+
+        private void ExitButton_Click(object sender, RoutedEventArgs e)
+        {
+            _hotkeyService.Dispose();
+            Application.Current.Shutdown();
+        }
+        
         protected override void OnClosed(EventArgs e)
         {
-            var helper = new WindowInteropHelper(this);
-
-            UnregisterHotKey(helper.Handle, HOTKEY_ID_INCLUDES_ONLY);
-            UnregisterHotKey(helper.Handle, HOTKEY_ID_INCLUDES_AND_MAIN);
-
+            _hotkeyService.Dispose();
             base.OnClosed(e);
         }
 
-        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
-        {
-            const int WM_HOTKEY = 0x0312;
-
-            if (msg == WM_HOTKEY)
-            {
-                int hotkeyId = wParam.ToInt32();
-                handled = true;
-
-                switch (hotkeyId)
-                {
-                    case HOTKEY_ID_INCLUDES_ONLY:
-                        _ = CompileFromClipboardAsync(BuildMode.IncludesOnly);
-                        return IntPtr.Zero;
-
-                    case HOTKEY_ID_INCLUDES_AND_MAIN:
-                        _ = CompileFromClipboardAsync(BuildMode.IncludesAndMain);
-                        return IntPtr.Zero;
-                }
-            }
-
-            return IntPtr.Zero;
-        }
-
-        private async Task CompileFromClipboardAsync(BuildMode mode)
+        private async Task ExecuteAsync(BuildMode mode)
         {
             try
             {
-                if (!Clipboard.ContainsText())
-                {
-                    _overlay.ShowMessage("Буфер пуст. Скопируй C++ код (Ctrl+C).");
-                    return;
-                }
-
-                string code = Clipboard.GetText();
+                string? code = ClipboardService.GetText();
 
                 if (string.IsNullOrWhiteSpace(code))
                 {
@@ -97,14 +94,7 @@ namespace CodeOverlayRunner
                     return;
                 }
 
-                string modeText = mode switch
-                {
-                    BuildMode.IncludesOnly => "Компилирую C++...",
-                    BuildMode.IncludesAndMain => "Компилирую C++...",
-                    _ => "Компилирую C++..."
-                };
-
-                _overlay.ShowMessage(modeText);
+                _overlay.ShowMessage("Компилирую...");
 
                 string result = await CompilerService.CompileAndRunCppAsync(code, mode);
 
@@ -115,11 +105,5 @@ namespace CodeOverlayRunner
                 _overlay.ShowMessage("Ошибка:\n" + ex.Message);
             }
         }
-
-        [DllImport("user32.dll")]
-        private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
-
-        [DllImport("user32.dll")]
-        private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
     }
 }
