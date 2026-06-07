@@ -17,18 +17,18 @@ namespace CodeOverlayRunner.Services
     public static class CompilerService
     {
         private const string CommonIncludes =
-@"#include <iostream>
-#include <vector>
-#include <string>
-#include <deque>
-#include <list>
-#include <algorithm>
-#include <queue>
-#include <stack>
+            @"#include <iostream>
+            #include <vector>
+            #include <string>
+            #include <deque>
+            #include <list>
+            #include <algorithm>
+            #include <queue>
+            #include <stack>
 
-using namespace std;
+            using namespace std;
 
-";
+            ";
 
         private static string FindVsDevCmd()
         {

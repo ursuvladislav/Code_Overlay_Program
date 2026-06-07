@@ -2,52 +2,67 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="CodeOverlay v0.4.0"
-        Height="310"
-        Width="320"
+        Height="320"
+        Width="640"
+        ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen">
 
-    <StackPanel Margin="20"
-                HorizontalAlignment="Center">
-
-        <TextBlock Text="CodeOverlay v0.4.0"
-                   FontSize="20"
-                   FontWeight="Bold"
-                   HorizontalAlignment="Center"
-                   Margin="0,0,0,10"/>
-        
-        <TextBlock Text="Status: Stopped"
-                   HorizontalAlignment="Center"
-                   Margin="0,0,0,25"/>
-        
-        <Button Content="Start"
-                Width="220"
-                Height="40"
-                Margin="0,0,0,10"
-                Click="StartButton_Click"/>
-
-        <Grid Width="220"
-              Margin="0,0,0,10">
-
+        <Grid Margin="20">
                 <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="15"/>
                         <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-        
-                <Button Grid.Column="0"
-                        Content="Settings"
-                        Height="40"/>
 
-                <Button Grid.Column="2"
-                        Content="GitHub"
-                        Height="40"
-                        Click="GitHubButton_Click"/>
+                <!-- Левая часть -->
+                <StackPanel Grid.Column="0"
+                        HorizontalAlignment="Center">
+
+                        <TextBlock Text="🥪 CodeOverlay v0.4.0"
+                                FontSize="20"
+                                FontWeight="Bold"
+                                HorizontalAlignment="Center"
+                                Margin="0,0,0,10"/>
+                        
+                        <TextBlock Text="Status: Stopped"
+                                HorizontalAlignment="Center"
+                                Margin="0,0,0,25"/>
+                        
+                        <Button Content="Start"
+                                Width="220"
+                                Height="40"
+                                Margin="0,0,0,10"
+                                Click="StartButton_Click"/>
+
+                        <Grid Width="220"
+                        Margin="0,0,0,10">
+
+                                <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                        
+                                <Button Grid.Column="0"
+                                        Content="Settings"
+                                        Height="40"
+                                        Click="SettingsButton_Click"/>
+
+                                <Button Grid.Column="2"
+                                        Content="GitHub"
+                                        Height="40"
+                                        Click="GitHubButton_Click"/>
+                        </Grid>
+
+                        <Button Content="Exit"
+                                Width="220"
+                                Height="40"
+                                Click="ExitButton_Click"/>
+
+                </StackPanel>
+
+                <!-- Левая часть -->
+                <ContentControl x:Name="RightContent"
+                        Grid.Column="2"/>
         </Grid>
-
-        <Button Content="Exit"
-                Width="220"
-                Height="40"
-                Click="ExitButton_Click"/>
-
-    </StackPanel>
 </Window>

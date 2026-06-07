@@ -3,6 +3,9 @@ using System.Threading.Tasks;
 using System.Windows;
 using CodeOverlayRunner.Services;
 using System.Diagnostics;
+using System.ComponentModel;
+using System.Windows.Controls;
+using CodeOverlayRunner.Views;
 
 namespace CodeOverlayRunner
 {
@@ -12,10 +15,13 @@ namespace CodeOverlayRunner
         private readonly OverlayWindow _overlay;
 
         private bool _isRunning = false;
+        private bool _isExiting = false;
 
         public MainWindow()
         {
             InitializeComponent();
+
+            RightContent.Content = new CodeRainView();
 
             _overlay = new OverlayWindow();
             _hotkeyService = new HotkeyService(this);
@@ -60,8 +66,25 @@ namespace CodeOverlayRunner
             Hide();
         }
 
+        private void SettingsButton_Click(object sender, RoutedEventArgs e)
+        {
+            RightContent.Content = new TextBlock
+            {
+                Text = "Settings page\n\nLanguage: Coming soon\nHotkeys: Coming soon\nCompiler: Coming soon",
+                FontSize = 14,
+                TextWrapping = TextWrapping.Wrap
+            };
+        }
+
         private void GitHubButton_Click(object sender, RoutedEventArgs e)
         {
+            RightContent.Content = new TextBlock
+            {
+                Text = "GitHub repository will open in browser.",
+                FontSize = 14,
+                TextWrapping = TextWrapping.Wrap
+            };
+
             Process.Start(
                 new ProcessStartInfo
                 {
@@ -70,16 +93,32 @@ namespace CodeOverlayRunner
                 });
         }
 
-        private void ExitButton_Click(object sender, RoutedEventArgs e)
+        private void ExitApplication()
         {
+            if (_isExiting)
+                return;
+
+            _isExiting = true;
+
             _hotkeyService.Dispose();
             Application.Current.Shutdown();
+        }
+
+        private void ExitButton_Click(object sender, RoutedEventArgs e)
+        {
+            ExitApplication();
         }
         
         protected override void OnClosed(EventArgs e)
         {
             _hotkeyService.Dispose();
             base.OnClosed(e);
+        }
+
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            ExitApplication();
+            base.OnClosing(e);
         }
 
         private async Task ExecuteAsync(BuildMode mode)
