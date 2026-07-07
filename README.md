@@ -16,7 +16,7 @@ The application can take incomplete C++ snippets from the clipboard, wrap them w
 
 ## Current Status
 
-**Version:** `v0.5.0-alpha`  
+**Version:** `v0.5.0`  
 **Status:** Active development  
 **Platform:** Windows  
 **Primary language:** C# / WPF  
