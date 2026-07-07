@@ -1,11 +1,10 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
 using CodeOverlayRunner.Services;
-using System.Diagnostics;
-using System.ComponentModel;
-using System.Windows.Controls;
 using CodeOverlayRunner.Views;
+using System.ComponentModel;
 
 namespace CodeOverlayRunner
 {
@@ -16,13 +15,13 @@ namespace CodeOverlayRunner
 
         private bool _isRunning = false;
         private bool _isExiting = false;
+        private const string GithubUrl =
+            "https://github.com/ursuvladislav/Code_Overlay_Program";
 
         public MainWindow()
         {
             InitializeComponent();
-
-            RightContent.Content = new CodeRainView();
-
+            
             _overlay = new OverlayWindow();
             _hotkeyService = new HotkeyService(this);
 
@@ -51,9 +50,52 @@ namespace CodeOverlayRunner
             {
                 await ExecuteAsync(BuildMode.IncludesAndMain);
             };
+
+            ShowHomeView();
         }
 
-        private void StartButton_Click(object sender, RoutedEventArgs e)
+        private void ShowHomeView()
+        {
+            var view = new HomeView();
+
+            view.StartClicked += (_, _) => StartOverlayMode();
+            view.SettingsClicked += (_, _) => ShowSettingsView();
+            view.GitHubClicked += (_, _) => ShowGitHubView();
+            view.ExitClicked += (_, _) => ExitApplication();
+
+            MainContent.Content = view;
+        }
+
+        private void ShowSettingsView()
+        {
+            var view = new SettingsView();
+
+            view.SaveClicked += (_, _) =>
+            {
+                string interfaceLanguage = view.GetSelectedInterfaceLanguage();
+                string programmingLanguage = view.GetSelectedProgrammingLanguage();
+                string timeout = view.GetSelectedTimeout();
+
+                _overlay.ShowMessage(
+                    $"Settings saved:\nLanguage: {interfaceLanguage}\nProgramming: {programmingLanguage}\nTimeout: {timeout}");
+            };
+
+            view.BackClicked += (_, _) => ShowHomeView();
+
+            MainContent.Content = view;
+        }
+
+        private void ShowGitHubView()
+        {
+            var view = new GitHubView();
+
+            view.OpenGitHubClicked += (_, _) => OpenGitHub();
+            view.BackClicked += (_, _) => ShowHomeView();
+
+            MainContent.Content = view;
+        }
+
+        private void StartOverlayMode()
         {
             if (_isRunning)
                 return;
@@ -66,31 +108,13 @@ namespace CodeOverlayRunner
             Hide();
         }
 
-        private void SettingsButton_Click(object sender, RoutedEventArgs e)
+        private void OpenGitHub()
         {
-            RightContent.Content = new TextBlock
+            Process.Start(new ProcessStartInfo
             {
-                Text = "Settings page\n\nLanguage: Coming soon\nHotkeys: Coming soon\nCompiler: Coming soon",
-                FontSize = 14,
-                TextWrapping = TextWrapping.Wrap
-            };
-        }
-
-        private void GitHubButton_Click(object sender, RoutedEventArgs e)
-        {
-            RightContent.Content = new TextBlock
-            {
-                Text = "GitHub repository will open in browser.",
-                FontSize = 14,
-                TextWrapping = TextWrapping.Wrap
-            };
-
-            Process.Start(
-                new ProcessStartInfo
-                {
-                    FileName = "https://github.com/ursuvladislav/Code_Overlay_Program",
-                    UseShellExecute = true
-                });
+                FileName = GithubUrl,
+                UseShellExecute = true
+            });
         }
 
         private void ExitApplication()
@@ -100,24 +124,36 @@ namespace CodeOverlayRunner
 
             _isExiting = true;
 
-            _hotkeyService.Dispose();
-            Application.Current.Shutdown();
-        }
+            try
+            {
+                _hotkeyService.Dispose();
+            }
+            catch
+            {
+                // Игнорируем ошибки при закрытии
+            }
 
-        private void ExitButton_Click(object sender, RoutedEventArgs e)
-        {
-            ExitApplication();
-        }
-        
-        protected override void OnClosed(EventArgs e)
-        {
-            _hotkeyService.Dispose();
-            base.OnClosed(e);
+            try
+            {
+                _overlay.Close();
+            }
+            catch
+            {
+                // Игнорируем ошибки при закрытии overlay
+            }
+            
+            Application.Current.Shutdown();
         }
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            ExitApplication();
+            if (!_isExiting)
+            {
+                e.Cancel = true;
+                ExitApplication();
+                return;
+            }
+
             base.OnClosing(e);
         }
 
