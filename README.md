@@ -29,9 +29,11 @@ The application can take incomplete C++ snippets from the clipboard, wrap them w
 ### Implemented
 
 - WPF desktop application
-- Main UI window
-- Start / Exit controls
-- GitHub button
+- Multi-screen UI navigation
+- Home screen
+- Settings screen
+- GitHub screen
+- Start / Exit / Save / Back controls
 - Background mode after pressing Start
 - Global hotkey handling
 - Clipboard-based C++ code execution
@@ -43,6 +45,9 @@ The application can take incomplete C++ snippets from the clipboard, wrap them w
 - Execution timeout protection
 - Basic high-tech animated right panel
 - Service-based project structure
+- Centralized application shutdown logic
+- GitHub repository integration
+- Settings UI foundation
 
 ---
 
@@ -54,7 +59,6 @@ After pressing **Start**, the application hides the main window and begins liste
 |---|---|
 | `Ctrl + Shift + Space` | Compile clipboard text with predefined C++ includes and generated `main()` |
 | `Ctrl + Shift + Alt + O` | Stop overlay mode and reopen the main window |
-| `Ctrl + Shift + /` | Compile clipboard text with predefined C++ includes |
 
 ---
 
@@ -63,18 +67,22 @@ After pressing **Start**, the application hides the main window and begins liste
 The workflow is simple:
 
 ```text
-Copy C++ code
+Copy a small C++ snippet
     ↓
-Press hotkey
+Press Start in CodeOverlay
     ↓
-CodeOverlay reads clipboard
+The app enters background mode
     ↓
-Applies selected template mode
+Press a global hotkey
     ↓
-Creates temporary C++ source file
+CodeOverlay reads clipboard text
     ↓
-Compiles with Clang++
+Applies the selected C++ template mode
     ↓
-Runs executable
+Generates a temporary C++ source file
     ↓
-Displays output in overlay window
+Compiles the generated file with Clang++
+    ↓
+Runs the executable with timeout protection
+    ↓
+Displays stdout, stderr, or compiler errors in the overlay window
